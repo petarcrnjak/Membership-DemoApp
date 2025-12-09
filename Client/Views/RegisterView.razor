@@ -1,0 +1,99 @@
+@inject NavigationManager Navigation
+@inject AuthenticationStateProvider AuthStateProvider
+
+@inherits ViewModelComponentBase<RegisterViewModel>
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card shadow">
+                <div class="card-header bg-success text-white">
+                    <h3 class="mb-0">Register</h3>
+                </div>
+                <div class="card-body">
+                    <EditForm Model="@ViewModel.Model" OnValidSubmit="@(() => ViewModel.RegisterAsync())">
+                        <DataAnnotationsValidator />
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">First Name</label>
+                                <InputText @bind-Value="ViewModel.Model.FirstName" class="form-control" placeholder="First name" />
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Last Name</label>
+                                <InputText @bind-Value="ViewModel.Model.LastName" class="form-control" placeholder="Last name" />
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Email</label>
+                            <InputText @bind-Value="ViewModel.Model.Email" class="form-control" placeholder="Enter your email" />
+                            <ValidationMessage For="@(() => ViewModel.Model.Email)" class="text-danger" />
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Password</label>
+                            <InputText type="password" @bind-Value="ViewModel.Model.Password" class="form-control" placeholder="Create a password" />
+                            <ValidationMessage For="@(() => ViewModel.Model.Password)" class="text-danger" />
+                            <small class="form-text text-muted">Minimum 6 characters, at least one uppercase and one digit.</small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Confirm Password</label>
+                            <InputText type="password" @bind-Value="ViewModel.Model.ConfirmPassword" class="form-control" placeholder="Re-enter password" />
+                            <ValidationMessage For="@(() => ViewModel.Model.ConfirmPassword)" class="text-danger" />
+                        </div>
+
+                        <button type="submit" class="btn btn-success w-100" disabled="@ViewModel.IsLoading">
+                            @if (ViewModel.IsLoading)
+                            {
+                                <span class="spinner-border spinner-border-sm me-2"></span>
+                            }
+                            Register
+                        </button>
+
+                        @if (!string.IsNullOrEmpty(ViewModel.ErrorMessage))
+                        {
+                            <div class="alert alert-danger mt-3 mb-0">
+                                <strong>@ViewModel.ErrorMessage</strong>
+                                @if (ViewModel.Errors != null && ViewModel.Errors.Any())
+                                {
+                                    <ul class="mb-0 mt-2">
+                                        @foreach (var error in ViewModel.Errors)
+                                        {
+                                            <li>@error</li>
+                                        }
+                                    </ul>
+                                }
+                            </div>
+                        }
+
+                        @if (ViewModel.SuccessMessage)
+                        {
+                            <div class="alert alert-success mt-3 mb-0">Registration successful! Redirecting...</div>
+                        }
+                    </EditForm>
+
+                    <div class="mt-4 text-center">
+                        <p class="mb-0">
+                            Already have an account? <a href="/login">Login here</a>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    protected override void InitializeViewModel(RegisterViewModel viewModel)
+    {
+        // Set the success callback for navigation after registration
+        viewModel.OnRegisterSuccess = async (token) =>
+        {
+            var authProvider = (CustomAuthStateProvider)AuthStateProvider;
+            await authProvider.MarkUserAsAuthenticated(token);
+            Navigation.NavigateTo("/", forceLoad: true);
+        };
+    }
+}
