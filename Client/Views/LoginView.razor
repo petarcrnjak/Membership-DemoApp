@@ -1,0 +1,68 @@
+﻿@inject NavigationManager Navigation
+@inject AuthenticationStateProvider AuthStateProvider
+
+@inherits ViewModelComponentBase<LoginViewModel>
+
+<div class="row justify-content-center mt-5">
+    <div class="col-md-4">
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white">
+                <h3 class="mb-0">Login</h3>
+            </div>
+            <div class="card-body">
+                <EditForm Model="@ViewModel.Model" OnValidSubmit="@(() => ViewModel.LoginAsync())">
+                    <DataAnnotationsValidator />
+
+                    <div class="mb-3">
+                        <label class="form-label">Email</label>
+                        <InputText @bind-Value="ViewModel.Model.Email" class="form-control" placeholder="Enter your email" />
+                        <ValidationMessage For="@(() => ViewModel.Model.Email)" class="text-danger" />
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Password</label>
+                        <InputText type="password" @bind-Value="ViewModel.Model.Password" class="form-control" placeholder="Enter your password" />
+                        <ValidationMessage For="@(() => ViewModel.Model.Password)" class="text-danger" />
+                    </div>
+
+                    <div class="mb-3 form-check">
+                        <InputCheckbox @bind-Value="ViewModel.Model.RememberMe" class="form-check-input" id="rememberMe" />
+                        <label class="form-check-label" for="rememberMe">Remember me</label>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary w-100" disabled="@ViewModel.IsLoading">
+                        @if (ViewModel.IsLoading)
+                        {
+                            <span class="spinner-border spinner-border-sm me-2"></span>
+                        }
+                        Login
+                    </button>
+
+                    @if (!string.IsNullOrEmpty(ViewModel.ErrorMessage))
+                    {
+                        <div class="alert alert-danger mt-3 mb-0">@ViewModel.ErrorMessage</div>
+                    }
+                </EditForm>
+
+                <div class="mt-4 text-center">
+                    <p class="mb-0">
+                        Don't have an account? <a href="/register">Register here</a>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    protected override void InitializeViewModel(LoginViewModel viewModel)
+    {
+        // Set the success callback for navigation after login
+        viewModel.OnLoginSuccess = async (token) =>
+        {
+            var authProvider = (CustomAuthStateProvider)AuthStateProvider;
+            await authProvider.MarkUserAsAuthenticated(token);
+            Navigation.NavigateTo("/", forceLoad: true);
+        };
+    }
+}
